@@ -307,3 +307,34 @@ function updateEventTimer(elementId, schedule, currentHour, currentMin, currentS
     el.textContent = timeString;
     el.style.color = "#FF5459";
 }
+
+// Register popup
+const registerLink = document.querySelector('.register-link');
+const registerModal = document.createElement('div');
+registerModal.className = 'register-modal';
+registerModal.innerHTML = `
+  <div class="register-popup">
+    <button class="close-btn" aria-label="Close">&times;</button>
+    <h3>Create Account</h3>
+    <p>Enter your desired username and password directly ingame to automatically create your account.</p>
+  </div>
+`;
+document.body.appendChild(registerModal);
+
+if (registerLink) {
+  registerLink.addEventListener('click', (e) => {
+    e.preventDefault();
+    registerModal.classList.add('show');
+  });
+}
+
+registerModal.addEventListener('click', (e) => {
+  if (e.target === registerModal) {
+    registerModal.classList.remove('show');
+  }
+});
+
+registerModal.querySelector('.close-btn')?.addEventListener('click', () => {
+  registerModal.classList.remove('show');
+});
+
