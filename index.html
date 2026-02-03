@@ -3,567 +3,695 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Loa Castle</title>
-	<link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
-	<link rel="shortcut icon" href="images/favicon.png" type="image/png">
+    <title>Loa Castle — Extreme Action MMORPG</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="images/favicon.png">
+    <link rel="shortcut icon" href="images/favicon.png" type="image/png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Rajdhani:wght@300;400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <style>
-	/* Inline styles for the new components (to be moved to style.css) */
-	.class-info {
-		margin-top: var(--space-12);
-	}
-	.attack-weapon {
-	  font-size: var(--font-size-base);
-	  color: #ff5459;
-	  font-weight: var(--font-weight-medium);
-	  margin-bottom: var(--space-8);
-	  text-transform: uppercase;
-	  letter-spacing: 0.05em;
-	}
-
-	.stat-bars {
-		display: flex;
-		flex-direction: column;
-		gap: var(--space-6);
-		margin-top: var(--space-12);
-	}
-	.stat-bar {
-		display: flex;
-		align-items: center;
-		gap: var(--space-12);
-	}
-	.stat-bar span {
-	  font-size: 12px;
-	  font-weight: var(--font-weight-semibold);
-	  width: 6rem;
-	  flex-shrink: 0;
-	  color: #aaa;
-	  text-transform: uppercase;
-	  white-space: nowrap;
-	}
-
-	.bar-container {
-		flex: 0 0 75%;
-		height: 7px;
-		background: var(--color-secondary);
-		border-radius: var(--radius-full);
-		overflow: hidden;
-	}
-
-	/* Unique colors per stat type */
-	.bar {
-		height: 100%;
-		border-radius: var(--radius-full);
-	}
-	.bar.physical { background: linear-gradient(90deg, #666666, #999999); }
-	.bar.magic { background: linear-gradient(90deg, #666666, #999999); }
-	.bar.defense { background: linear-gradient(90deg, #666666, #999999); }
-	.bar.support { background: linear-gradient(90deg, #666666, #999999); }
-
-	.slide-image img {
-		display: block;
-		width: 100%;
-		height: auto;
-		border-radius: var(--radius-base);
-	}
-
-    </style>
 </head>
 <body>
+    <!-- Ambient Background Effects -->
+    <div class="ambient-bg">
+        <div class="ambient-orb orb-1"></div>
+        <div class="ambient-orb orb-2"></div>
+        <div class="ambient-orb orb-3"></div>
+        <div class="particle-field" id="particleField"></div>
+    </div>
+
     <!-- Top Navigation -->
-    <header class="site-header">
-        <div class="container header-inner">
-				<div class="logo">
-					<img src="images/favicon.png" alt="LC Logo" class="logo-mark">
-					<span class="logo-text">Loa Castle</span>
-				</div>
-            <nav class="nav">
-                <button class="nav-toggle" aria-label="Toggle navigation">
-                    <span></span><span></span><span></span>
-                </button>
-                <ul class="nav-links">
-					<li><a href="#" class="register-link">Register</a></li>
-					<li><a href="https://www.xtremetop100.com/in.php?site=1132378375">Vote</a></li>
-					<li><a href="https://discord.gg/e3paHmWphw">Community</a></li>
-                    <li><a href="#classes">Classes</a></li>
-                    <li><a href="#rates">Rates</a></li>
-                    <li><a href="#timers">Timer</a></li>
-                    <li><a href="#donate" class="nav-link-donate">Donate</a></li>
-                </ul>
+<header class="site-header">
+    <div class="container header-inner">
+        <nav class="nav">
+            <button class="nav-toggle" aria-label="Toggle navigation">
+                <span></span><span></span><span></span>
+            </button>
+            <ul class="nav-links">
+                <li><a href="#classes">Register</a></li>
+				<li><a href="https://www.xtremetop100.com/in.php?site=1132378375" target="_blank" rel="noopener noreferrer">Vote</a></li>				
+                <li><a href="#classes">Classes</a></li>
+                <li><a href="#rates">Rates</a></li>
+                <li><a href="#timers">Events</a></li>
+                <li><a href="#donate" class="nav-link-highlight">Donate</a></li>
+            </ul>
+        </nav>
 
-				<!-- Minimalist players-online + Deadfront timer -->
-				<div class="nav-status-group">
-					<div class="nav-status">
-						<span class="status-dot"></span>
-						<span class="status-label">Online</span>
-						<span class="status-count">N/A</span>
-					</div>
-				</div>
-            </nav>
+        <div class="nav-status-group">
+            <div class="server-status">
+                <span class="status-indicator"></span>
+                <span class="status-text">
+                    <span class="status-label">Online</span>
+                    <span class="status-count" id="playersOnline">236</span>
+                </span>
+            </div>
         </div>
-    </header>
+    </div>
+</header>
 
-    <!-- Hero Section -->
+
     <main>
+        <!-- Hero Section -->
         <section class="hero">
+            <div class="hero-backdrop"></div>
+            <div class="hero-gradient"></div>
             <div class="container hero-inner">
-                <div class="hero-text">
-                    <h1>Loa Castle: Extreme Action MMORPG</h1>
-                    <p>Old-school, fast-paced combat with brutal PvP, explosive skills, and classic dungeon grinds on a balanced private server experience.</p>
+                <div class="hero-content" data-animate="fade-up">
+                    <div class="hero-badge">
+                        <span class="badge-icon">⚔</span>
+                        <span>Update 00.00.05 Now Live</span>
+                    </div>
+                    <h1 class="hero-title">
+                        <span class="title-line">Extreme</span>
+                        <span class="title-line title-accent">Action MMORPG</span>
+                    </h1>
+                    <p class="hero-description">
+                        Old-school, fast-paced combat with brutal PvP, explosive skills, and classic dungeon grinds. 
+                        Experience a balanced private server built for true warriors.
+                    </p>
                     <div class="hero-actions">
-                        <a href="#classes" class="btn primary">View Classes</a>
-                        <a href="https://drive.google.com/file/d/1Rya3Almz2kkVUWWfg5wTlWfA1JusHncU/view?usp=sharing" 
-						   class="btn ghost" 
-						   target="_blank" 
-						   rel="noopener noreferrer">
-						  Download
+
+						<a href="https://drive.google.com/file/d/1bnZHGRDQMKsmbgXQz4f0By8zqR6iMC-i/view?usp=sharing" target="_blank" rel="noopener noreferrer" class="btn btn-download">
+							<span class="btn-text">Download</span>
+							<span class="btn-icon">
+								<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+									<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+									<polyline points="7 10 12 15 17 10"></polyline>
+									<line x1="12" y1="15" x2="12" y2="3"></line>
+								</svg>
+							</span>
+						</button>
+						<a href="#classes" class="btn btn-dark">
+							<span class="btn-text">Explore Classes</span>
+							<span class="btn-icon">→</span>
 						</a>
+
                     </div>
                 </div>
-                <div class="hero-highlight">
-                    <div class="hero-tag">Server Info</div>
-                    <div class="hero-stat-row">
-                        <span>Class</span><span>7</span>
-                    </div>
-                    <div class="hero-stat-row">
-                        <span>Exp Rate</span><span>x2</span>
-                    </div>
-                    <div class="hero-stat-row">
-                        <span>Drop Rate</span><span>x2</span>
+
+                <div class="hero-stats" data-animate="fade-left">
+                    <div class="stats-card">
+                        <div class="stats-header">
+                            <span class="stats-icon">◆</span>
+                            <span>Server Overview</span>
+                        </div>
+                        <div class="stats-body">
+                            <div class="stat-item">
+                                <span class="stat-label">Classes Available</span>
+                                <span class="stat-value">7</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Experience Rate</span>
+                                <span class="stat-value">×2</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Drop Rate</span>
+                                <span class="stat-value">×2</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-label">Grade Points</span>
+                                <span class="stat-value">×2</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <div class="hero-scroll-indicator">
+                <span>Scroll to explore</span>
+                <div class="scroll-arrow"></div>
+            </div>
         </section>
 
-        <!-- Class Slider Section -->
-        <section id="classes" class="section">
+        <!-- Class Introduction Section -->
+        <section id="classes" class="section section-classes">
+            <div class="section-bg-pattern"></div>
             <div class="container">
-                <header class="section-header">
-                    <h2>Class Introduction</h2>
-                    <p>Meet the core Loa Castle classes and their distinct roles in party play and PvP.</p>
+                <header class="section-header" data-animate="fade-up">
+                    <span class="section-tag">Choose Your Path</span>
+                    <h2 class="section-title">Class Introduction</h2>
+                    <p class="section-subtitle">Meet the core Loa Castle classes and their distinct roles in party play and PvP</p>
                 </header>
 
-                <div class="slider">
-                    <button class="slider-btn prev" aria-label="Previous class">❮</button>
+                <div class="class-showcase">
+                    <div class="class-nav">
+                        <button class="class-nav-btn prev" aria-label="Previous class">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <div class="class-indicators" id="classIndicators"></div>
+                        <button class="class-nav-btn next" aria-label="Next class">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
 
-                    <div class="slider-track-wrapper">
-                        <div class="slider-track">
+                    <div class="slider-viewport">
+                        <div class="slider-track" id="classSliderTrack">
                             <!-- Azure Knight -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Azure Knight.png" alt="Azure Knight">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Azure Knight.png" alt="Azure Knight" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Azure Knight</h3>
-                                    <p>Versatile melee frontliner who can tank or deal heavy physical damage using greatswords, dual weapons, or sword-and-shield setups.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										Azure Knights are the descendants of Undo Masochie that once filled Genoa, the Land of Destruction, with the rays of light reflected on their swords as they slashed away at their enemies.
-										They have abandoned magic, archery, and everything else to hone their swordsmanship to their fullest potential and wield the power of Mother Nature.
-									</p>
-                                    <div class="class-info">
-                                        <div class="attack-weapon">Melee | Sword, Mace, Axe, Shield</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 80%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 20%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 70%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 30%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Azure Knight</h3>
+                                        <span class="class-role">Melee | Sword, Mace, Axe, Shield</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Versatile melee frontliner who can tank or deal heavy physical damage using greatswords, dual weapons, or sword-and-shield setups.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>Azure Knights are the descendants of Undo Masochie that once filled Genoa, the Land of Destruction, with the rays of light reflected on their swords as they slashed away at their enemies. They have abandoned magic, archery, and everything else to hone their swordsmanship to their fullest potential.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 80%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 20%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 70%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 30%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Segita Hunter -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Segita Hunter.png" alt="Segita Hunter">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Segita Hunter.png" alt="Segita Hunter" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Segita Hunter</h3>
-                                    <p>Long-range damage dealer specializing in bows, crossbows, and daggers, using mobility and debuffs to control fights from a distance.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										Segita Hunters are the first ones that succeeded in establishing trade and commerce with the people of Helicita and the other states beyond the mountains.
-										These children of Qune, the goddess of beauty, are skilled tacticians and archers; they are loyal soldiers for their employers as long as they are not given commands that violate their ethics.
-									</p>
-										<div class="class-info">
-                                        <div class="attack-weapon">Ranged | Bow, Crossbow, Dagger</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 70%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 20%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 30%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 20%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Segita Hunter</h3>
+                                        <span class="class-role">Ranged | Bow, Crossbow, Dagger</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Long-range damage dealer specializing in bows, crossbows, and daggers, using mobility and debuffs to control fights from a distance.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>Segita Hunters are the first ones that succeeded in establishing trade and commerce with the people of Helicita. These children of Qune, the goddess of beauty, are skilled tacticians and archers; loyal soldiers as long as they are not given commands that violate their ethics.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 70%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 20%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 30%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 20%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Incar Magician -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Incar Magician.png" alt="Incar Magician">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Incar Magician.png" alt="Incar Magician" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Incar Magician</h3>
-                                    <p>Elemental caster with powerful fire, ice, and lightning spells, excelling at wide-area damage and crowd control in parties.</p><br>
-									<h6>Class Background</h5>
-										<p style="margin-top: 0.5em;">
-											These priestesses of Incar, also known as Zodiac, are passionately driven to acquire knowledge about magic and the world's truths.
-											They can create magic spells by using only the Force Elemental, the most basic element of nature.
-											Incar Magicians strictly focus on elemental magic and also despise black magic, which caused the Grand Fall.
-										</p>
-										<div class="class-info">									
-                                        <div class="attack-weapon">Magic | Wand, Staff</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 20%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 90%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 20%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 30%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Incar Magician</h3>
+                                        <span class="class-role">Magic | Wand, Staff</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Elemental caster with powerful fire, ice, and lightning spells, excelling at wide-area damage and crowd control in parties.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>These priestesses of Incar, also known as Zodiac, are passionately driven to acquire knowledge about magic and the world's truths. They can create magic spells by using only the Force Elemental, strictly focusing on elemental magic while despising black magic.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 20%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 90%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 20%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 30%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Vicious Summoner -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Vicious Summoner.png" alt="Vicious Summoner">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Vicious Summoner.png" alt="Vicious Summoner" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Vicious Summoner</h3>
-                                    <p>Hybrid fighter who commands summoned creatures while using twin blades and debuffs for aggressive, hit-and-run combat.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										The summoners have existed since the age of the Alokens, long before the Incar Order was established or the use of magic was regulated by strict laws.
-										Their ability to summon creatures is very mysterious, and the Incar Order considers their arts as black magic that must be prohibited.
-										Despite their suppression, this type of black magic is attracting more practitioners, even after the disastrous Grand Fall.
-									</p>                                 
-										<div class="class-info">
-                                        <div class="attack-weapon">Melee, Range | Twin Blade, Staff</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 60%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 70%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 40%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 40%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Vicious Summoner</h3>
+                                        <span class="class-role">Melee, Range | Twin Blade, Staff</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Hybrid fighter who commands summoned creatures while using twin blades and debuffs for aggressive, hit-and-run combat.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>The summoners have existed since the age of the Alokens, long before the Incar Order was established. Their ability to summon creatures is mysterious, and despite suppression, this type of black magic is attracting more practitioners, even after the disastrous Grand Fall.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 60%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 70%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 40%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 40%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Segnale -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Segnale.png" alt="Segnale">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Segnale.png" alt="Segnale" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Segnale</h3>
-                                    <p>Primary support class that heals, resurrects, and curses enemies, making it essential in dungeon runs and group PvP.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										Segnale are still connected to the Abyss, yet they have one foot in the human realms.
-										They have mastered the art of the Blood Whip, and their taste for blood makes them outcasts among other people.
-										However, their healing abilities are praised and welcomed by the wounded and the dead.
-										Their fighting abilities are also appreciated, as they can cause great devastation among the enemy with their wide range of powers.
-									</p>                                 
-										<div class="class-info">
-                                        <div class="attack-weapon">Range | Blood Whip</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 20%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 60%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 30%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 100%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Segnale</h3>
+                                        <span class="class-role">Range | Blood Whip</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Primary support class that heals, resurrects, and curses enemies, making it essential in dungeon runs and group PvP.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>Segnale are still connected to the Abyss, yet they have one foot in the human realms. They have mastered the art of the Blood Whip, and their healing abilities are praised by the wounded and the dead. Their fighting abilities cause great devastation among enemies.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 20%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 60%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 30%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 100%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Bagi Warrior -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Bagi Warrior.png" alt="Bagi Warrior">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Bagi Warrior.png" alt="Bagi Warrior" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Bagi Warrior</h3>
-                                    <p>Durable berserker with high defense and magic resistance, using heavy-hitting close-range skills to disrupt enemy lines.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										The Grand Fall exposed the Bagi Warriors to otherworldly contamination, granting their bodies inhumane strength and imbuing them with the parasitic Spirit of Karon.
-										Bagi Warriors use their incredible stamina and unshakable willpower to survive deadly fights.
-										They control the Spirit of Karon within them to unleash special abilities and maximize their physical capabilities, greatly enhancing their power.
-									</p>                                 
-										<div class="class-info">
-                                        <div class="attack-weapon">Melee | Gauntlet</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 90%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 10%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 90%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 10%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Bagi Warrior</h3>
+                                        <span class="class-role">Melee | Gauntlet</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Durable berserker with high defense and magic resistance, using heavy-hitting close-range skills to disrupt enemy lines.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>The Grand Fall exposed the Bagi Warriors to otherworldly contamination, granting their bodies inhumane strength and imbuing them with the parasitic Spirit of Karon. They control this spirit to unleash special abilities and maximize their physical capabilities.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 90%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 10%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 90%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 10%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
 
                             <!-- Aloken -->
-                            <article class="slide">
-                                <div class="slide-image">
-                                    <img src="images/Aloken.png" alt="Aloken">
+                            <article class="class-slide">
+                                <div class="class-visual">
+                                    <div class="class-image-frame">
+                                        <img src="images/Aloken.png" alt="Aloken" class="class-image">
+                                        <div class="class-image-glow"></div>
+                                    </div>
                                 </div>
-                                <div class="slide-body">
-                                    <h3>Aloken</h3>
-                                    <p>Spear-wielding hybrid that delivers steady melee damage while boosting allies with powerful buffs and defensive support spells.</p><br>
-									<h6>Class Background</h5>
-									<p style="margin-top: 0.5em;">
-										Alokens have remained on the land, unlike their kin who deserted Trieste.
-										After the Grand Fall, they settled in the Jungle of Eternity and blamed their pride for the disaster brought upon the land.
-										They wished for a quiet and peaceful life until Karon, who feared the Alokens’ strength, destroyed the jungle.
-									</p>
-										<div class="class-info">
-                                        <div class="attack-weapon">Melee | Spear, Guardarm</div>
-                                        <div class="stat-bars">
-                                            <div class="stat-bar">
-                                                <span>Physical</span>
-                                                <div class="bar-container"><div class="bar physical" style="width: 60%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Magic</span>
-                                                <div class="bar-container"><div class="bar magic" style="width: 40%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Defense</span>
-                                                <div class="bar-container"><div class="bar defense" style="width: 60%"></div></div>
-                                            </div>
-                                            <div class="stat-bar">
-                                                <span>Support</span>
-                                                <div class="bar-container"><div class="bar support" style="width: 70%"></div></div>
-                                            </div>
+                                <div class="class-info">
+                                    <div class="class-header">
+                                        <h3 class="class-name">Aloken</h3>
+                                        <span class="class-role">Melee | Spear, Guardarm</span>
+                                    </div>
+                                    <p class="class-description">
+                                        Spear-wielding hybrid that delivers steady melee damage while boosting allies with powerful buffs and defensive support spells.
+                                    </p>
+                                    <div class="class-lore">
+                                        <h4>Class Background</h4>
+                                        <p>Alokens have remained on the land, unlike their kin who deserted Trieste. After the Grand Fall, they settled in the Jungle of Eternity and blamed their pride for the disaster brought upon the land. They wished for peace until Karon destroyed the jungle.</p>
+                                    </div>
+                                    <div class="class-stats">
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Physical</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill physical" style="--fill: 60%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Magic</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill magic" style="--fill: 40%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Defense</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill defense" style="--fill: 60%"></div></div>
+                                        </div>
+                                        <div class="stat-bar-item">
+                                            <span class="stat-name">Support</span>
+                                            <div class="stat-bar-track"><div class="stat-bar-fill support" style="--fill: 70%"></div></div>
                                         </div>
                                     </div>
                                 </div>
                             </article>
-
                         </div>
                     </div>
-
-                    <button class="slider-btn next" aria-label="Next class">❯</button>
                 </div>
-
             </div>
         </section>
 
-        <!-- Rates Section -->
-        <section id="rates" class="section section-alt">
+        <!-- Server Rates Section -->
+        <section id="rates" class="section section-rates">
             <div class="container">
-                <header class="section-header">
-                    <h2>Server Rates</h2>
-                    <p>Balanced rates tuned for classic grinding with slightly boosted progression for a smoother experience.</p>
+                <header class="section-header" data-animate="fade-up">
+                    <span class="section-tag">Server Configuration</span>
+                    <h2 class="section-title">Server Rates</h2>
+                    <p class="section-subtitle">Balanced rates tuned for classic grinding with boosted progression</p>
                 </header>
 
                 <div class="rates-grid">
-                    <div class="rate-card">
-                        <span class="rate-label">EXP</span>
-                        <span class="rate-value">x2</span>
-                        <center><p>Level up faster while keeping the classic grind.</p></center>
+                    <div class="rate-card" data-animate="fade-up" data-delay="100">
+                        <div class="rate-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+                            </svg>
+                        </div>
+                        <span class="rate-label">Experience</span>
+                        <span class="rate-value">×2</span>
+                        <p class="rate-description">Level up faster while keeping the classic grind experience alive.</p>
                     </div>
-                    <div class="rate-card">
+                    <div class="rate-card" data-animate="fade-up" data-delay="200">
+                        <div class="rate-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                            </svg>
+                        </div>
                         <span class="rate-label">Drop Rate</span>
-                        <span class="rate-value">x2</span>
-                        <center><p>Double the chance of valuable drops everywhere.</p></center>
+                        <span class="rate-value">×2</span>
+                        <p class="rate-description">Double the chance of valuable drops from monsters everywhere.</p>
                     </div>
-                    <div class="rate-card">
+                    <div class="rate-card" data-animate="fade-up" data-delay="300">
+                        <div class="rate-icon">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                                <circle cx="12" cy="12" r="10"/>
+                                <polyline points="12 6 12 12 16 14"/>
+                            </svg>
+                        </div>
                         <span class="rate-label">Grade Points</span>
-                        <span class="rate-value">x2</span>
-                        <center><p>Earn Grade Points faster to boost rank & stats</p></center>
+                        <span class="rate-value">×2</span>
+                        <p class="rate-description">Earn Grade Points faster to boost your rank and character stats.</p>
                     </div>
                 </div>
             </div>
         </section>
 
-<section id="timers" class="section">
-    <div class="container">
-                <header class="section-header">
-                    <h2>Upcoming Events</h2>
-                    <p>Events occur daily at scheduled times.</p>
+        <!-- Event Timers Section -->
+        <section id="timers" class="section section-events">
+            <div class="section-bg-pattern"></div>
+            <div class="container">
+                <header class="section-header" data-animate="fade-up">
+                    <span class="section-tag">Daily Schedule</span>
+                    <h2 class="section-title">Upcoming Events</h2>
+                    <p class="section-subtitle">Events occur daily at scheduled times (GMT+8)</p>
                 </header>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 30px;">
-            
-			<!-- Deadfront -->
-			<div class="timer-card">
-				<h4 style="color: #8B8B8B; margin-bottom: 10px;">Deadfront</h4>
-				<div id="deadfrontCardTimer" style="font-size: 32px; font-weight: bold; color: #ff5459; font-family: monospace; margin-bottom: 10px;">00:00:00</div>
-				<p style="color: #aaa; font-size: 12px; margin: 0;">04:00 | 08:00 | 12:00 | 16:00 | 20:00 | 24:00</p>
-			</div>
 
-			<!-- Party Match -->
-			<div class="timer-card">
-				<h4 style="color: #8B8B8B; margin-bottom: 10px;">Party Match</h4>
-				<div id="partyCardTimer" style="font-size: 32px; font-weight: bold; color: #ff5459; font-family: monospace; margin-bottom: 10px;">00:00:00</div>
-				<p style="color: #aaa; font-size: 12px; margin: 0;">02:00 | 06:00 | 10:00 | 14:00 | 18:00 | 22:00</p>
-			</div>
-
-			<!-- Battle Royal -->
-			<div class="timer-card">
-				<h4 style="color: #8B8B8B; margin-bottom: 10px;">Battle Royal</h4>
-				<div id="battleCardTimer" style="font-size: 32px; font-weight: bold; color: #ff5459; font-family: monospace; margin-bottom: 10px;">00:00:00</div>
-				<p style="color: #aaa; font-size: 12px; margin: 0;">03:00 | 07:00 | 11:00 | 15:00 | 19:00 | 23:00</p>
-			</div>
-
-
-        </div>
-    </div>
-</section>
-
-<!-- Donate Section -->
-<section id="donate" class="section section-alt">
-    <div class="container">
-        <header class="section-header">
-            <h2>Support the Server</h2>
-            <p>Help us keep Loa Castle running strong. Your donation directly supports server maintenance and improvements.</p>
-        </header>
-
-        <div class="donate-slider">
-            <button class="donate-slider-btn prev" aria-label="Previous donation">❮</button>
-
-            <div class="donate-slider-track-wrapper">
-                <div class="donate-slider-track">
-                    <!-- €10 → 10,000 coins -->
-                    <article class="donate-slide">
-                        <div class="donate-slide-image-placeholder">
-                            <span class="donate-slide-amount">€10</span>
+                <div class="events-grid">
+                    <div class="event-card" data-animate="fade-up" data-delay="100">
+                        <div class="event-icon">
+                            <span>⚔</span>
                         </div>
-                        <div class="donate-slide-body">
-                            <h3>Bronze</h3>
-                            <p>10,000 coins</p>
-                            <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YOUR_PAYPAL_EMAIL&item_name=Loa Castle+Server+Donation&amount=10.00&currency_code=USD&no_shipping=2" target="_blank" class="btn primary">Donate</a>
+                        <h4 class="event-name">Deadfront</h4>
+                        <div class="event-timer" id="deadfrontCardTimer">00:00:00</div>
+                        <div class="event-schedule">
+                            <span>04:00</span><span>08:00</span><span>12:00</span>
+                            <span>16:00</span><span>20:00</span><span>24:00</span>
                         </div>
-                    </article>
+                    </div>
 
-					<!-- Silver -->
-					<article class="donate-slide">
-					  <div class="donate-slide-image-placeholder">
-						<span class="donate-slide-amount">€30</span>
-					  </div>
-					  <div class="donate-slide-body">
-						<h3>Silver</h3>
-						<p>30,000 coins +<span class="bonus-tag">4,500 Bonus</span></p>
-						<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YOURPAYPALEMAIL&item_name=Loa%20Castle%20Server%20Donation&amount=30.00¤cy_code=USD&no_shipping=2" target="_blank" class="btn primary">Donate</a>
-					  </div>
-					</article>
+                    <div class="event-card" data-animate="fade-up" data-delay="200">
+                        <div class="event-icon">
+                            <span>⚔</span>
+                        </div>
+                        <h4 class="event-name">Party Match</h4>
+                        <div class="event-timer" id="partyCardTimer">00:00:00</div>
+                        <div class="event-schedule">
+                            <span>02:00</span><span>06:00</span><span>10:00</span>
+                            <span>14:00</span><span>18:00</span><span>22:00</span>
+                        </div>
+                    </div>
 
-					<!-- Platinum -->
-					<article class="donate-slide">
-					  <div class="donate-slide-image-placeholder">
-						<span class="donate-slide-amount">€80</span>
-					  </div>
-					  <div class="donate-slide-body">
-						<h3>Platinum</h3>
-						<p>80,000 coins +<span class="bonus-tag">12,500 Bonus</span></p>
-						<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YOURPAYPALEMAIL&item_name=Loa%20Castle%20Server%20Donation&amount=80.00¤cy_code=USD&no_shipping=2" target="_blank" class="btn primary">Donate</a>
-					  </div>
-					</article>
-
-					<!-- Diamond (VIP) -->
-					<article class="donate-slide donate-slide-vip">
-					  <div class="donate-slide-image-placeholder donate-slide-vip-badge">
-						<span class="donate-slide-amount">€100</span>
-						<span class="vip-tag">VIP</span>
-					  </div>
-					  <div class="donate-slide-body">
-						<h3>Diamond</h3>
-						<p>100,000 coins +<span class="bonus-tag">50,000 Bonus</span> +<span class="vip-badge-inline">{VIP} Tag</span></p>
-						<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_donations&business=YOURPAYPALEMAIL&item_name=Loa%20Castle%20Server%20Donation&amount=100.00¤cy_code=USD&no_shipping=2" target="_blank" class="btn primary">Donate</a>
-					  </div>
-					</article>
-
+                    <div class="event-card" data-animate="fade-up" data-delay="300">
+                        <div class="event-icon">
+                            <span>⚔</span>
+                        </div>
+                        <h4 class="event-name">Battle Royal</h4>
+                        <div class="event-timer" id="battleCardTimer">00:00:00</div>
+                        <div class="event-schedule">
+                            <span>03:00</span><span>07:00</span><span>11:00</span>
+                            <span>15:00</span><span>19:00</span><span>23:00</span>
+                        </div>
+                    </div>
                 </div>
             </div>
+        </section>
 
-            <button class="donate-slider-btn next" aria-label="Next donation">❯</button>
-        </div>
+        <!-- Donate Section -->
+        <section id="donate" class="section section-donate">
+            <div class="container">
+                <header class="section-header" data-animate="fade-up">
+                    <span class="section-tag">Support Us</span>
+                    <h2 class="section-title">Support the Server</h2>
+                    <p class="section-subtitle">Help us keep Loa Castle running strong with your contribution</p>
+                </header>
 
-        <div class="donate-info">
-            <p><strong>Note:</strong> Donations via the website are currently <code>unavailable</code>. If you wish to donate, please contact a staff member for assistance.</p>
-        </div>
-    </div>
-</section>
+                <div class="donate-showcase">
+                    <div class="donate-nav">
+                        <button class="donate-nav-btn prev" aria-label="Previous tier">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="15 18 9 12 15 6"></polyline>
+                            </svg>
+                        </button>
+                        <div class="donate-indicators" id="donateIndicators"></div>
+                        <button class="donate-nav-btn next" aria-label="Next tier">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="9 18 15 12 9 6"></polyline>
+                            </svg>
+                        </button>
+                    </div>
 
+                    <div class="donate-viewport">
+                        <div class="donate-track" id="donateSliderTrack">
+                            <!-- Bronze -->
+                            <article class="donate-slide">
+                                <div class="donate-visual">
+                                    <div class="donate-tier-badge tier-bronze">
+                                        <span class="tier-amount">€10</span>
+                                    </div>
+                                </div>
+                                <div class="donate-info">
+                                    <h3 class="donate-tier-name">Bronze</h3>
+                                    <div class="donate-coins">
+                                        <span class="coins-amount">10,000</span>
+                                        <span class="coins-label">coins</span>
+                                    </div>
+                                    <button class="btn btn-primary donate-btn" data-amount="10" data-tier="Bronze" data-coins="10000" data-price-id="price_1SqXTeKCDWm9YMsdMVUIWa9u">
+                                        <span class="btn-text">Donate Now</span>
+                                    </button>
+                                </div>
+                            </article>
+
+                            <!-- Silver -->
+                            <article class="donate-slide">
+                                <div class="donate-visual">
+                                    <div class="donate-tier-badge tier-silver">
+                                        <span class="tier-amount">€30</span>
+                                    </div>
+                                </div>
+                                <div class="donate-info">
+                                    <h3 class="donate-tier-name">Silver</h3>
+                                    <div class="donate-coins">
+                                        <span class="coins-amount">30,000</span>
+                                        <span class="coins-label">coins</span>
+                                        <span class="coins-bonus">+4,500 bonus</span>
+                                    </div>
+                                    <button class="btn btn-primary donate-btn" data-amount="20" data-tier="Silver" data-coins="30000" data-bonus="4500" data-price-id="price_1SqsJnKCDWm9YMsdQswQdaqL">
+                                        <span class="btn-text">Donate Now</span>
+                                    </button>
+                                </div>
+                            </article>
+
+                            <!-- Gold -->
+                            <article class="donate-slide">
+                                <div class="donate-visual">
+                                    <div class="donate-tier-badge tier-gold">
+                                        <span class="tier-amount">€50</span>
+                                    </div>
+                                </div>
+                                <div class="donate-info">
+                                    <h3 class="donate-tier-name">Gold</h3>
+                                    <div class="donate-coins">
+                                        <span class="coins-amount">50,000</span>
+                                        <span class="coins-label">coins</span>
+                                        <span class="coins-bonus">+12,500 bonus</span>
+                                    </div>
+                                    <button class="btn btn-primary donate-btn" data-amount="50" data-tier="Gold" data-coins="50000" data-bonus="12500" data-price-id="price_1SqsKiKCDWm9YMsdZY5rhJ7o">
+                                        <span class="btn-text">Donate Now</span>
+                                    </button>
+                                </div>
+                            </article>
+
+                            <!-- Platinum -->
+                            <article class="donate-slide">
+                                <div class="donate-visual">
+                                    <div class="donate-tier-badge tier-platinum">
+                                        <span class="tier-amount">€80</span>
+                                    </div>
+                                </div>
+                                <div class="donate-info">
+                                    <h3 class="donate-tier-name">Platinum</h3>
+                                    <div class="donate-coins">
+                                        <span class="coins-amount">80,000</span>
+                                        <span class="coins-label">coins</span>
+                                        <span class="coins-bonus">+32,000 bonus</span>
+                                    </div>
+                                    <button class="btn btn-primary donate-btn" data-amount="80" data-tier="Platinum" data-coins="80000" data-bonus="32000" data-price-id="price_1SqsLdKCDWm9YMsdCCo61YyA">
+                                        <span class="btn-text">Donate Now</span>
+                                    </button>
+                                </div>
+                            </article>
+
+                            <!-- Diamond -->
+                            <article class="donate-slide">
+                                <div class="donate-visual">
+                                    <div class="donate-tier-badge tier-diamond">
+                                        <span class="tier-amount">€100</span>
+                                        <span class="tier-vip">VIP</span>
+                                    </div>
+                                </div>
+                                <div class="donate-info">
+                                    <h3 class="donate-tier-name">Diamond</h3>
+                                    <div class="donate-coins">
+                                        <span class="coins-amount">100,000</span>
+                                        <span class="coins-label">coins</span>
+                                        <span class="coins-bonus">+50,000 bonus</span>
+                                    </div>
+                                    <button class="btn btn-primary btn-glow donate-btn" data-amount="100" data-tier="Diamond" data-coins="100000" data-bonus="50000" data-price-id="price_1SqsMwKCDWm9YMsdX9QBrQjg">
+                                        <span class="btn-text">Donate Now</span>
+                                    </button>
+                                </div>
+                            </article>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="donate-notice">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10"/>
+                        <line x1="12" y1="16" x2="12" y2="12"/>
+                        <line x1="12" y1="8" x2="12.01" y2="8"/>
+                    </svg>
+                    <p>Clicking "Donate Now" will initiate a secure checkout session via Stripe for your selected tier.</p>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
     <footer class="site-footer">
         <div class="container footer-inner">
-            <span>&copy; 2026 Loa Castle. All rights reserved.</span>
+            <div class="footer-brand">
+                <img src="images/favicon.png" alt="LC" class="footer-logo">
+                <span class="footer-name">Loa Castle</span>
+            </div>
+            <p class="footer-copyright">© 2026 Loa Castle. All rights reserved.</p>
+            <div class="footer-links">
+                <a href="#classes">Classes</a>
+                <a href="#rates">Rates</a>
+                <a href="#timers">Events</a>
+                <a href="#donate">Donate</a>
+            </div>
         </div>
     </footer>
 
