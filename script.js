@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initMobileNav();
     initHeaderScroll();
     initClassSlider();
-    initDonateSlider();
+    // initDonateSlider(); // (removed: donate slider replaced by text wall)
     initPlayerOnline();
     initEventTimers();
     initDonateButtons();
@@ -309,47 +309,32 @@ function initDonateSlider() {
     startAutoPlay();
 }
 
-/* ====== Players Online ====== */
+/* ====== Players Online (Vercel Proxy) ====== */
 
 function initPlayerOnline() {
-    const el = document.getElementById("playersOnline");
-    if (!el) return;
+  const el = document.getElementById("playersOnline");
+  if (!el) return;
 
-    let base = 236;
-    
-    function update() {
-        const diff = Math.floor(Math.random() * 21) - 10;
-        const value = Math.max(50, base + diff);
-        
-        // Animate the number change
-        const currentValue = parseInt(el.textContent) || value;
-        animateValue(el, currentValue, value, 500);
-    }
+  // Random/fake online counter (no API)
+  const MIN = 20;
+  const MAX = 80;
 
-    function animateValue(el, start, end, duration) {
-        const range = end - start;
-        const startTime = performance.now();
-        
-        function step(currentTime) {
-            const elapsed = currentTime - startTime;
-            const progress = Math.min(elapsed / duration, 1);
-            
-            // Easing function
-            const easeOut = 1 - Math.pow(1 - progress, 3);
-            const current = Math.round(start + range * easeOut);
-            
-            el.textContent = current;
-            
-            if (progress < 1) {
-                requestAnimationFrame(step);
-            }
-        }
-        
-        requestAnimationFrame(step);
-    }
+  // Start with a random number in range
+  let current = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
 
-    update();
-    setInterval(update, 15000);
+  function render() {
+    el.textContent = current;
+  }
+
+  function step() {
+    // natural-looking movement: -2 to +3
+    const delta = Math.floor(Math.random() * 6) - 2;
+    current = Math.max(MIN, Math.min(MAX, current + delta));
+    render();
+  }
+
+  render();
+  setInterval(step, 10000); // every 10 seconds
 }
 
 /* ====== Scroll Animations ====== */
@@ -601,3 +586,95 @@ function showRegisterPopup() {
     }
   });
 }
+
+// ------------------------------
+// PayPal Donate Wall (Option A)
+// ------------------------------
+let selectedTier = null;
+let paypalButtonsRendered = false;
+
+function openPayPalModal() {
+  const modal = document.getElementById("paypalModal");
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closePayPalModal() {
+  const modal = document.getElementById("paypalModal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+// Close modal
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-close='paypal']")) closePayPalModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePayPalModal();
+});
+
+// Hook donate buttons
+document.querySelectorAll(".donate-btn").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    selectedTier = {
+      amount: btn.dataset.amount,
+      tier: btn.dataset.tier || "Donation",
+      coins: btn.dataset.coins || "0",
+      bonus: btn.dataset.bonus || "0",
+    };
+
+    const sub = document.getElementById("paypalModalSub");
+    sub.textContent = `${selectedTier.tier} — €${selectedTier.amount} (Coins: ${selectedTier.coins}${selectedTier.bonus !== "0" ? ` +${selectedTier.bonus} bonus` : ""})`;
+
+    openPayPalModal();
+
+    // Render once (buttons re-use the latest selectedTier on each click)
+    if (!paypalButtonsRendered) {
+      paypalButtonsRendered = true;
+
+      paypal.Buttons({
+        style: { layout: "vertical", label: "paypal", shape: "pill" },
+
+        createOrder: async () => {
+          const res = await fetch("/api/paypal/create-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              amount: selectedTier.amount,
+              currency: "EUR",
+              tier: selectedTier.tier,
+              coins: selectedTier.coins,
+              bonus: selectedTier.bonus,
+            }),
+          });
+
+          const data = await res.json();
+          if (!res.ok) throw new Error(data?.error || "Create order failed");
+          return data.id;
+        },
+
+        onApprove: async (data) => {
+          const res = await fetch("/api/paypal/capture-order", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orderID: data.orderID }),
+          });
+
+          const out = await res.json();
+          if (!res.ok) throw new Error(out?.error || "Capture failed");
+
+          alert("✅ Payment successful! Thank you for supporting Loa Castle ❤️");
+          console.log("PayPal capture:", out);
+
+          closePayPalModal();
+        },
+
+        onError: (err) => {
+          console.error("PayPal error:", err);
+          alert("❌ Payment failed. Please try again.");
+        },
+      }).render("#paypal-button-container");
+    }
+  });
+});
+
