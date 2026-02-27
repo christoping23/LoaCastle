@@ -310,32 +310,30 @@ function initDonateSlider() {
     startAutoPlay();
 }
 
-/* ====== Players Online (Vercel Proxy) ====== */
+/* ====== Players Online (Live via Vercel API) ====== */
 
 function initPlayerOnline() {
   const el = document.getElementById("playersOnline");
   if (!el) return;
 
-  // Random/fake online counter (no API)
-  const MIN = 20;
-  const MAX = 80;
+  // Same-origin route served by Vercel (HTTPS-safe)
+  const ONLINE_URL = "/api/online";
 
-  // Start with a random number in range
-  let current = Math.floor(Math.random() * (MAX - MIN + 1)) + MIN;
+  async function refresh() {
+    try {
+      const res = await fetch(ONLINE_URL, { cache: "no-store" });
+      if (!res.ok) throw new Error("Bad response");
+      const data = await res.json();
 
-  function render() {
-    el.textContent = current;
+      const count = Number(data.count ?? 0);
+      el.textContent = Number.isFinite(count) ? String(count) : "0";
+    } catch (err) {
+      el.textContent = "--"; // shows offline / unreachable
+    }
   }
 
-  function step() {
-    // natural-looking movement: -2 to +3
-    const delta = Math.floor(Math.random() * 6) - 2;
-    current = Math.max(MIN, Math.min(MAX, current + delta));
-    render();
-  }
-
-  render();
-  setInterval(step, 10000); // every 10 seconds
+  refresh();
+  setInterval(refresh, 5000); // ✅ refresh every 5 seconds
 }
 
 /* ====== Scroll Animations ====== */
