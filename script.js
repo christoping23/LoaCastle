@@ -10,7 +10,8 @@ document.addEventListener("DOMContentLoaded", function () {
     // initDonateSlider(); // (removed: donate slider replaced by text wall)
     initPlayerOnline();
     initEventTimers();
-    initDonateButtons();
+    initDonateLinks();
+    // initDonateButtons(); // old modal checkout (removed)
     initScrollAnimations();
 });
 
@@ -458,89 +459,204 @@ function displayTimer(el, seconds) {
     el.style.textShadow = "0 0 20px rgba(255, 77, 90, 0.4)";
 }
 
-/* ====== DONATE BUTTON HANDLING ====== */
+
+
+/* ====== DONATE LINKS (Hosted PayPal Checkout) ====== */
+function initDonateLinks() {
+  const links = document.querySelectorAll("a.donate-link");
+  if (!links || links.length === 0) return;
+
+  links.forEach((a) => {
+    a.addEventListener("click", () => {
+      const row = a.closest(".donate-text-row");
+      if (row) {
+        row.classList.remove("is-clicked");
+        // trigger reflow for animation restart
+        void row.offsetWidth;
+        row.classList.add("is-clicked");
+      }
+    });
+  });
+}
+
+/* ====== DONATE BUTTON HANDLING (PayPal via LoaCastleBE) ====== */
+
+/**
+ * This site uses LoaCastleBE endpoints:
+ *  - GET  /api/paypal/config
+ *  - POST /api/paypal/create-order   { username, package }
+ *  - POST /api/paypal/capture-order  { order_id }
+ *
+ * If your website is NOT served from the same domain as the BE,
+ * set API_BASE to your BE domain (example: "https://loacastle.online").
+ */
+const API_BASE = "";
+
+let selectedTier = null;
+let paypalButtonsRendered = false;
+let paypalConfig = null;
+
+function openPayPalModal() {
+  const modal = document.getElementById("paypalModal");
+  modal.classList.add("show");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closePayPalModal() {
+  const modal = document.getElementById("paypalModal");
+  modal.classList.remove("show");
+  modal.setAttribute("aria-hidden", "true");
+  setModalMessage("");
+}
+
+function setModalMessage(msg, kind) {
+  const el = document.getElementById("donateModalMsg") || null;
+  // fallback if you don't have donateModalMsg (we use alerts as backup)
+  if (!el) return;
+  el.classList.remove("is-error", "is-ok");
+  if (!msg) { el.textContent = ""; return; }
+  el.textContent = msg;
+  if (kind === "error") el.classList.add("is-error");
+  if (kind === "ok") el.classList.add("is-ok");
+}
+
+async function loadPayPalConfig() {
+  if (paypalConfig) return paypalConfig;
+  const res = await fetch(`${API_BASE}/api/paypal/config`, { method: "GET" });
+  if (!res.ok) throw new Error("Failed to load PayPal config");
+  paypalConfig = await res.json();
+  return paypalConfig;
+}
+
+function ensurePayPalSDK(clientId, currency) {
+  return new Promise((resolve, reject) => {
+    if (window.paypal && window.paypal.Buttons) return resolve();
+
+    const existing = document.querySelector("script[data-paypal-sdk='1']");
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("Failed to load PayPal SDK")));
+      return;
+    }
+
+    const s = document.createElement("script");
+    s.dataset.paypalSdk = "1";
+    s.src = `https://www.paypal.com/sdk/js?client-id=${encodeURIComponent(clientId)}&currency=${encodeURIComponent(currency)}&intent=capture`;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error("Failed to load PayPal SDK"));
+    document.head.appendChild(s);
+  });
+}
+
+function validUsername(u) {
+  return /^[A-Za-z0-9]{3,20}$/.test(u);
+}
+
+function updateModalSubtext() {
+  const sub = document.getElementById("paypalModalSub");
+  if (!sub || !selectedTier) return;
+  const bonusTxt = selectedTier.bonus && selectedTier.bonus !== "0" ? ` +${selectedTier.bonus} bonus` : "";
+  sub.textContent = `${selectedTier.tier} — ${selectedTier.price} (Coins: ${selectedTier.coins}${bonusTxt})`;
+}
+
+function clearPayPalButtons() {
+  const c = document.getElementById("paypal-button-container");
+  if (c) c.innerHTML = "";
+  paypalButtonsRendered = false;
+}
 
 function initDonateButtons() {
-    const donateButtons = document.querySelectorAll('.donate-btn');
-    
-    if (!donateButtons || donateButtons.length === 0) return;
-    
-    donateButtons.forEach(button => {
-        button.addEventListener('click', async function(e) {
-            e.preventDefault();
-            
-            if (button.disabled) return;
-            button.disabled = true;
-            button.classList.add('loading');
-            
-            const originalText = button.querySelector('.btn-text').textContent;
-            button.querySelector('.btn-text').textContent = 'Processing...';
-            
-            const priceId = button.getAttribute('data-price-id');
-            
-            if (!priceId || priceId === 'price_XXXXX') {
-                showNotification('Price ID not configured. Please contact support.', 'error');
-                resetButton(button, originalText);
-                return;
+  const donateButtons = document.querySelectorAll(".donate-btn");
+  if (!donateButtons || donateButtons.length === 0) return;
+
+  donateButtons.forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.preventDefault();
+
+      selectedTier = {
+        package: btn.dataset.package || (btn.dataset.tier || "donation").toLowerCase(),
+        tier: btn.dataset.tier || "Donation",
+        coins: btn.dataset.coins || "0",
+        bonus: btn.dataset.bonus || "0",
+        price: (btn.closest(".donate-text-right")?.querySelector(".donate-text-price")?.textContent || `€${btn.dataset.amount || ""}`).trim(),
+      };
+
+      updateModalSubtext();
+      openPayPalModal();
+
+      // We re-render buttons each time so package changes are always applied
+      clearPayPalButtons();
+
+      try {
+        const cfg = await loadPayPalConfig();
+        await ensurePayPalSDK(cfg.clientId, cfg.currency);
+
+        // render PayPal buttons
+        paypalButtonsRendered = true;
+
+        paypal.Buttons({
+          style: { layout: "vertical", label: "paypal", shape: "pill" },
+
+          createOrder: async () => {
+            const username = (document.getElementById("paypalUsername")?.value || "").trim();
+
+            if (!validUsername(username)) {
+              throw new Error("Invalid username. Use 3–20 letters/numbers only.");
             }
-            
-            const payload = { priceId: priceId };
-            
-            try {
-                const response = await fetch('http://162.120.71.62/create-checkout-session', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload),
-                    redirect: 'follow'
-                });
-                
-                if (response.redirected && response.url) {
-                    window.location.href = response.url;
-                    return;
-                }
-                
-                if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.includes('application/json')) {
-                        const data = await response.json();
-                        
-                        if (data.url) {
-                            window.location.href = data.url;
-                            return;
-                        }
-                    }
-                }
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                resetButton(button, originalText);
-                
-            } catch (error) {
-                console.error('Error creating checkout session:', error);
-                showNotification('Failed to create checkout session. Please try again.', 'error');
-                resetButton(button, originalText);
+
+            const res = await fetch(`${API_BASE}/api/paypal/create-order`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                username: username,
+                package: selectedTier.package,
+              }),
+            });
+
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) throw new Error(data?.error || "Create order failed");
+
+            // LoaCastleBE returns { orderID: "..." }
+            return data.orderID;
+          },
+
+          onApprove: async (data) => {
+            const res = await fetch(`${API_BASE}/api/paypal/capture-order`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ order_id: data.orderID }),
+            });
+
+            const out = await res.json().catch(() => ({}));
+            if (!res.ok || !out.ok) {
+              throw new Error(out?.error || out?.status || "Capture failed");
             }
-        });
+
+            alert("✅ Payment successful! Thank you for supporting Loa Castle ❤️");
+            closePayPalModal();
+          },
+
+          onError: (err) => {
+            console.error("PayPal error:", err);
+            alert("❌ Payment failed. " + (err?.message || "Please try again."));
+          },
+        }).render("#paypal-button-container");
+      } catch (err) {
+        console.error(err);
+        alert("❌ PayPal is not available right now. " + (err?.message || ""));
+      }
     });
+  });
 }
 
-function resetButton(button, text) {
-    button.disabled = false;
-    button.classList.remove('loading');
-    const btnText = button.querySelector('.btn-text');
-    if (btnText) btnText.textContent = text;
-}
+// Close modal
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-close='paypal']")) closePayPalModal();
+});
+document.addEventListener("keydown", (e) => {
+  if (e.key === "Escape") closePayPalModal();
+});
 
-function showNotification(message, type = 'info') {
-    // Simple notification - can be enhanced with a toast library
-    alert(message);
-}
-
-initRegisterPopup();
-
-/* ====== Register Popup Message ====== */
 
 function initRegisterPopup() {
   const registerLink = document.querySelector('a[href="#classes"]');
@@ -586,95 +702,4 @@ function showRegisterPopup() {
     }
   });
 }
-
-// ------------------------------
-// PayPal Donate Wall (Option A)
-// ------------------------------
-let selectedTier = null;
-let paypalButtonsRendered = false;
-
-function openPayPalModal() {
-  const modal = document.getElementById("paypalModal");
-  modal.classList.add("show");
-  modal.setAttribute("aria-hidden", "false");
-}
-
-function closePayPalModal() {
-  const modal = document.getElementById("paypalModal");
-  modal.classList.remove("show");
-  modal.setAttribute("aria-hidden", "true");
-}
-
-// Close modal
-document.addEventListener("click", (e) => {
-  if (e.target.closest("[data-close='paypal']")) closePayPalModal();
-});
-document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape") closePayPalModal();
-});
-
-// Hook donate buttons
-document.querySelectorAll(".donate-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    selectedTier = {
-      amount: btn.dataset.amount,
-      tier: btn.dataset.tier || "Donation",
-      coins: btn.dataset.coins || "0",
-      bonus: btn.dataset.bonus || "0",
-    };
-
-    const sub = document.getElementById("paypalModalSub");
-    sub.textContent = `${selectedTier.tier} — €${selectedTier.amount} (Coins: ${selectedTier.coins}${selectedTier.bonus !== "0" ? ` +${selectedTier.bonus} bonus` : ""})`;
-
-    openPayPalModal();
-
-    // Render once (buttons re-use the latest selectedTier on each click)
-    if (!paypalButtonsRendered) {
-      paypalButtonsRendered = true;
-
-      paypal.Buttons({
-        style: { layout: "vertical", label: "paypal", shape: "pill" },
-
-        createOrder: async () => {
-          const res = await fetch("/api/paypal/create-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              amount: selectedTier.amount,
-              currency: "EUR",
-              tier: selectedTier.tier,
-              coins: selectedTier.coins,
-              bonus: selectedTier.bonus,
-            }),
-          });
-
-          const data = await res.json();
-          if (!res.ok) throw new Error(data?.error || "Create order failed");
-          return data.id;
-        },
-
-        onApprove: async (data) => {
-          const res = await fetch("/api/paypal/capture-order", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ orderID: data.orderID }),
-          });
-
-          const out = await res.json();
-          if (!res.ok) throw new Error(out?.error || "Capture failed");
-
-          alert("✅ Payment successful! Thank you for supporting Loa Castle ❤️");
-          console.log("PayPal capture:", out);
-
-          closePayPalModal();
-        },
-
-        onError: (err) => {
-          console.error("PayPal error:", err);
-          alert("❌ Payment failed. Please try again.");
-        },
-      }).render("#paypal-button-container");
-    }
-  });
-});
 
