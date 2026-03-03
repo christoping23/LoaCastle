@@ -1057,88 +1057,130 @@ body {
   line-height: 1.5;
 }
 
-/* === Events Section === */
+/* === Events (minimalist / professional) === */
 .section-events {
   background: linear-gradient(180deg, var(--color-bg-secondary) 0%, var(--color-bg-deep) 100%);
 }
 
 .events-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: var(--space-lg);
+  align-items: stretch;
+}
+
+/* 6 cards = nice 3x2 on desktop, 2x3 on tablet */
+@media (max-width: 1024px) {
+  .events-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 640px) {
+  .events-grid { grid-template-columns: 1fr; }
 }
 
 .event-card {
   position: relative;
   padding: var(--space-xl);
   background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
+  border: 1px solid var(--color-border-subtle);
   border-radius: var(--radius-xl);
   text-align: center;
-  transition: all var(--transition-normal);
   overflow: hidden;
-}
 
-.event-card::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, rgba(255, 77, 90, 0.1) 0%, transparent 70%);
-  opacity: 0;
-  transition: opacity var(--transition-normal);
-  pointer-events: none;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-normal),
+              border-color var(--transition-normal),
+              box-shadow var(--transition-normal);
 }
 
 .event-card:hover {
-  border-color: var(--color-border-hover);
-  transform: translateY(-4px);
-}
-
-.event-card:hover::after {
-  opacity: 1;
+  transform: translateY(-3px);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: var(--shadow-md);
 }
 
 .event-icon {
-  font-size: 2rem;
-  margin-bottom: var(--space-md);
-  filter: drop-shadow(0 0 10px var(--color-accent-glow));
+  width: 44px;
+  height: 44px;
+  margin: 0 auto var(--space-md);
+  display: grid;
+  place-items: center;
+
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--color-border-subtle);
+}
+
+.event-icon span {
+  font-size: 1.2rem;
+  line-height: 1;
+  opacity: 0.9;
 }
 
 .event-name {
   font-family: var(--font-heading);
-  font-size: 1rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--color-text-muted);
-  margin-bottom: var(--space-md);
+  margin-bottom: var(--space-sm);
 }
 
 .event-timer {
   font-family: var(--font-mono);
-  font-size: 2.25rem;
-  font-weight: 700;
-  color: var(--color-accent);
-  letter-spacing: 0.05em;
+  font-size: clamp(1.8rem, 2.1vw, 2.2rem);
+  font-weight: 800;
+  letter-spacing: 0.06em;
   margin-bottom: var(--space-lg);
-  text-shadow: 0 0 20px var(--color-accent-glow);
+  color: var(--color-accent);
 }
 
 .event-schedule {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, max-content);
   justify-content: center;
   gap: var(--space-xs);
 }
 
+@media (max-width: 640px) {
+  .event-schedule { grid-template-columns: repeat(2, max-content); }
+}
+
 .event-schedule span {
-  padding: var(--space-xs) var(--space-sm);
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  min-width: 64px;
+  text-align: center;
+
+  border-radius: 10px;
+  border: 1px solid var(--color-border-subtle);
+  background: rgba(255, 255, 255, 0.03);
+
   font-family: var(--font-mono);
-  font-size: 0.6875rem;
+  font-size: 0.72rem;
   color: var(--color-text-dim);
 }
+
+/* === Ongoing state (subtle highlight, not flashy) === */
+.event-card.is-ongoing {
+  border-color: rgba(0, 212, 255, 0.35);
+  box-shadow: var(--shadow-md);
+}
+
+.event-card.is-ongoing .event-icon {
+  border-color: rgba(0, 212, 255, 0.30);
+  background: rgba(0, 212, 255, 0.06);
+}
+
+.event-card.is-ongoing .event-timer {
+  color: var(--color-cyan);
+  text-shadow: 0 0 14px var(--color-cyan-glow);
+}
+
+.event-card.is-ongoing .event-schedule span {
+  border-color: rgba(0, 212, 255, 0.22);
+  background: rgba(0, 212, 255, 0.04);
+}
+
 
 /* === Donate Section === */
 .section-donate {
@@ -2279,6 +2321,8 @@ a.donate-link{
   color: #00d4ff;
 }
 
+
+
 /* ---------- Footer Note ---------- */
 
 .donate-note {
@@ -2286,4 +2330,11 @@ a.donate-link{
   margin-top: 20px;
   font-size: 0.85rem;
   color: rgba(255,255,255,0.45);
+}
+
+/* --------- Register button footer -------- */
+.register-popup-confirm{
+  padding: 10px 18px;
+  font-size: 0.8125rem;
+  letter-spacing: 0.10em;
 }

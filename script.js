@@ -13,6 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     initDonateLinks();
     // initDonateButtons(); // old modal checkout (removed)
     initScrollAnimations();
+	initRegisterPopup();
 });
 
 /* ====== Mobile Navigation Toggle ====== */
@@ -360,103 +361,104 @@ function initScrollAnimations() {
     animatedElements.forEach(el => observer.observe(el));
 }
 
-/* ====== EVENT TIMERS (Deadfront, Party Match, Battle Royal) ====== */
-
+/* ====== EVENT TIMERS (6 events, minute-accurate, CSS-driven state) ====== */
 const eventSchedules = {
-    deadfront: {
-        times: [0, 4, 8, 12, 16, 20],
-        duration: 30
-    },
-    partyMatch: {
-        times: [2, 6, 10, 14, 18, 22],
-        duration: 60
-    },
-    battleRoyal: {
-        times: [3, 7, 11, 15, 19, 23],
-        duration: 60
-    }
+  deadfront: {
+    timesSeconds: [0, 4, 8, 12, 16, 20].map(h => h * 3600),
+    duration: 30
+  },
+  partyMatch: {
+    timesSeconds: [2, 6, 10, 14, 18, 22].map(h => h * 3600),
+    duration: 60
+  },
+  battleRoyal: {
+    timesSeconds: [3, 7, 11, 15, 19, 23].map(h => h * 3600),
+    duration: 60
+  },
+
+  deadland: {
+    timesSeconds: [(7 * 3600) + (5 * 60), (14 * 3600) + (5 * 60), (23 * 3600) + (5 * 60)],
+    duration: 30
+  },
+  elonohm: {
+    timesSeconds: [(7 * 3600) + (5 * 60), (14 * 3600) + (5 * 60), (23 * 3600) + (5 * 60)],
+    duration: 30
+  },
+  rubyEye: {
+    timesSeconds: [(7 * 3600) + (5 * 60), (14 * 3600) + (5 * 60), (23 * 3600) + (5 * 60)],
+    duration: 30
+  }
 };
 
 function initEventTimers() {
-    setInterval(updateAllTimers, 1000);
-    updateAllTimers();
+  setInterval(updateAllTimers, 1000);
+  updateAllTimers();
 }
 
 function updateAllTimers() {
-    const now = new Date();
-    const gmt8 = new Date(now.toLocaleString('en-US', { timeZone: 'Asia/Hong_Kong' }));
-    const hours = gmt8.getHours();
-    const mins = gmt8.getMinutes();
-    const secs = gmt8.getSeconds();
+  const now = new Date();
+  const gmt8 = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Hong_Kong" }));
 
-    updateEventTimer('deadfrontCardTimer', eventSchedules.deadfront, hours, mins, secs);
-    updateEventTimer('partyCardTimer', eventSchedules.partyMatch, hours, mins, secs);
-    updateEventTimer('battleCardTimer', eventSchedules.battleRoyal, hours, mins, secs);
+  const hours = gmt8.getHours();
+  const mins = gmt8.getMinutes();
+  const secs = gmt8.getSeconds();
+
+  updateEventTimer("deadfrontCardTimer", eventSchedules.deadfront, hours, mins, secs);
+  updateEventTimer("partyCardTimer", eventSchedules.partyMatch, hours, mins, secs);
+  updateEventTimer("battleCardTimer", eventSchedules.battleRoyal, hours, mins, secs);
+
+  updateEventTimer("deadlandCardTimer", eventSchedules.deadland, hours, mins, secs);
+  updateEventTimer("elonohmCardTimer", eventSchedules.elonohm, hours, mins, secs);
+  updateEventTimer("rubyEyeCardTimer", eventSchedules.rubyEye, hours, mins, secs);
 }
 
-function isEventOngoing(eventTimes, duration, currentHour, currentMin, currentSec) {
-    const currentTotalSeconds = currentHour * 3600 + currentMin * 60 + currentSec;
-
-    for (let eventHour of eventTimes) {
-        const eventStartSeconds = eventHour * 3600;
-        const eventEndSeconds = eventStartSeconds + (duration * 60);
-
-        if (currentTotalSeconds >= eventStartSeconds && currentTotalSeconds < eventEndSeconds) {
-            return true;
-        }
-    }
-    return false;
+function isEventOngoing(eventTimesSeconds, durationMinutes, currentTotalSeconds) {
+  for (let startSec of eventTimesSeconds) {
+    const endSec = startSec + (durationMinutes * 60);
+    if (currentTotalSeconds >= startSec && currentTotalSeconds < endSec) return true;
+  }
+  return false;
 }
 
 function updateEventTimer(elementId, schedule, currentHour, currentMin, currentSec) {
-    const el = document.getElementById(elementId);
-    if (!el) return;
+  const el = document.getElementById(elementId);
+  if (!el) return;
 
-    // Check if event is ongoing
-    if (isEventOngoing(schedule.times, schedule.duration, currentHour, currentMin, currentSec)) {
-        el.textContent = "ONGOING";
-        el.style.color = "#00d4ff";
-        el.style.textShadow = "0 0 20px rgba(0, 212, 255, 0.5)";
-        return;
-    }
+  // Clear inline styles from older versions (let CSS control visuals)
+  el.style.color = "";
+  el.style.textShadow = "";
 
-    // Calculate countdown to next event
-    let nextHour = null;
-    for (let i = 0; i < schedule.times.length; i++) {
-        if (schedule.times[i] > currentHour) {
-            nextHour = schedule.times[i];
-            break;
-        }
-    }
+  const card = el.closest(".event-card");
 
-    // If no event found today, next is first event tomorrow
-    if (nextHour === null) {
-        nextHour = schedule.times[0];
-        const secondsUntilEvent = (24 - currentHour + nextHour) * 3600 - currentMin * 60 - currentSec;
-        displayTimer(el, secondsUntilEvent);
-        return;
-    }
+  const currentTotalSeconds = (currentHour * 3600) + (currentMin * 60) + currentSec;
+  const times = (schedule.timesSeconds || []).slice().sort((a, b) => a - b);
 
-    // Event is today
-    const secondsUntilEvent = (nextHour - currentHour) * 3600 - currentMin * 60 - currentSec;
-    displayTimer(el, secondsUntilEvent);
+  const ongoing = isEventOngoing(times, schedule.duration, currentTotalSeconds);
+
+  if (card) card.classList.toggle("is-ongoing", ongoing);
+
+  if (ongoing) {
+    el.textContent = "ONGOING";
+    return;
+  }
+
+  // Next start (today or tomorrow)
+  let nextStart = times.find(t => t > currentTotalSeconds);
+  if (nextStart === undefined) nextStart = times[0] + (24 * 3600);
+
+  displayTimer(el, nextStart - currentTotalSeconds);
 }
 
 function displayTimer(el, seconds) {
-    const displayHours = Math.floor(seconds / 3600);
-    const displayMins = Math.floor((seconds % 3600) / 60);
-    const displaySecs = seconds % 60;
+  const displayHours = Math.floor(seconds / 3600);
+  const displayMins = Math.floor((seconds % 3600) / 60);
+  const displaySecs = seconds % 60;
 
-    const timeString =
-        String(displayHours).padStart(2, '0') + ':' +
-        String(displayMins).padStart(2, '0') + ':' +
-        String(displaySecs).padStart(2, '0');
-
-    el.textContent = timeString;
-    el.style.color = "#ff4d5a";
-    el.style.textShadow = "0 0 20px rgba(255, 77, 90, 0.4)";
+  el.textContent =
+    String(displayHours).padStart(2, "0") + ":" +
+    String(displayMins).padStart(2, "0") + ":" +
+    String(displaySecs).padStart(2, "0");
 }
-
 
 
 /* ====== DONATE LINKS (Hosted PayPal Checkout) ====== */
@@ -655,49 +657,87 @@ document.addEventListener("keydown", (e) => {
   if (e.key === "Escape") closePayPalModal();
 });
 
-
 function initRegisterPopup() {
-  const registerLink = document.querySelector('a[href="#classes"]');
+  const navLinks = Array.from(document.querySelectorAll(".nav-links a"));
+  const registerLink = navLinks.find(a => a.textContent.trim().toLowerCase() === "register");
   if (!registerLink) return;
-  registerLink.addEventListener('click', (e) => {
+
+  registerLink.addEventListener("click", (e) => {
     e.preventDefault();
-    showRegisterPopup();
+    showRegisterPopup({
+      title: "How to register?",
+      message: "Log in ingame to auto-create your account.",
+      buttonText: "Yes, I understand"
+    });
   });
 }
 
-function showRegisterPopup() {
-  const modal = document.createElement('div');
-  modal.className = 'register-popup-overlay';
-  modal.id = 'registerPopupOverlay';
-  const modalContent = document.createElement('div');
-  modalContent.className = 'register-popup-modal';
-  modalContent.innerHTML = `
+function showRegisterPopup({ title, message, buttonText }) {
+  // prevent duplicates
+  if (document.getElementById("registerPopupOverlay")) return;
+
+  const overlay = document.createElement("div");
+  overlay.className = "register-popup-overlay";
+  overlay.id = "registerPopupOverlay";
+  overlay.setAttribute("role", "dialog");
+  overlay.setAttribute("aria-modal", "true");
+  overlay.setAttribute("aria-label", title);
+
+  const modal = document.createElement("div");
+  modal.className = "register-popup-modal";
+
+  modal.innerHTML = `
     <div class="register-popup-header">
-      <h2>Account Registration</h2>
+      <h2>${escapeHtml(title)}</h2>
     </div>
     <div class="register-popup-body">
-      <p class="register-popup-message">Enter your desired username and password directly ingame to automatically create your account.</p>
+      <p class="register-popup-message">${escapeHtml(message)}</p>
     </div>
     <div class="register-popup-footer">
-      <button class="btn btn-primary register-popup-confirm">Got it</button>
+      <button type="button" class="btn btn-primary register-popup-confirm">${escapeHtml(buttonText)}</button>
     </div>
   `;
-  modal.appendChild(modalContent);
-  document.body.appendChild(modal);
-  setTimeout(() => modal.classList.add('is-open'), 10);
-  const confirmBtn = modal.querySelector('.register-popup-confirm');
+
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
+
+  // open animation (your CSS already supports .is-open)
+  requestAnimationFrame(() => overlay.classList.add("is-open"));
+
   const closePopup = () => {
-    modal.classList.remove('is-open');
-    setTimeout(() => modal.remove(), 300);
+    overlay.classList.remove("is-open");
+    window.setTimeout(() => overlay.remove(), 300);
   };
-  confirmBtn.addEventListener('click', closePopup);
-  modal.addEventListener('click', (e) => {
-    if (e.target === modal) closePopup();
+
+  // close on outside click
+  overlay.addEventListener("click", (e) => {
+    if (e.target === overlay) closePopup();
   });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && document.getElementById('registerPopupOverlay')) {
-      closePopup();
+
+  // close on button click
+  modal.querySelector(".register-popup-confirm")?.addEventListener("click", closePopup);
+
+  // close on ESC
+  const onKeyDown = (e) => {
+    if (e.key === "Escape") closePopup();
+  };
+  document.addEventListener("keydown", onKeyDown);
+
+  // cleanup keydown when removed
+  overlay.addEventListener("transitionend", () => {
+    if (!document.getElementById("registerPopupOverlay")) {
+      document.removeEventListener("keydown", onKeyDown);
     }
   });
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, (ch) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[ch]));
 }
 
