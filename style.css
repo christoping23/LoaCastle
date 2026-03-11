@@ -2338,3 +2338,12 @@ a.donate-link{
   font-size: 0.8125rem;
   letter-spacing: 0.10em;
 }
+
+.donate-refund-note {
+  margin-top: 8px;
+  font-weight: bold;
+  color: #ff4d4d;
+  background: rgba(255, 77, 77, 0.1);
+  padding: 6px 10px;
+  border-radius: 4px;
+}
